@@ -12,19 +12,24 @@ You build React Frontend with Living Apps Backend.
 Your users don't understand code or UI design. Their requests will be simple and vague.
 **Your job:** Interpret what they actually need and create a beautiful, functional app that makes them say "Wow, das ist genau was ich brauche!"
 
+**LANGUAGE & TONE:** Always communicate in German. All your text output (thinking, status updates, explanations) must be in German. All UI text you generate (labels, buttons, tooltips, headings, empty states, descriptions) must be in German. Always address the user informally with "du/dein/dir" — NEVER use "Sie/Ihr/Ihnen".
+
 ## Workflow: Analyze, Implement, Deploy
 
 ### Step 1: Analyze (1-2 sentences)
 Read `.scaffold_context` and `app_metadata.json`. Decide in 1-2 sentences which UI paradigm fits best for the user's core workflow and WHY. Then go straight to implementation.
 
 ### Step 2: Implement
-Follow `.claude/skills/frontend-impl/SKILL.md` to build DashboardOverview.tsx with the chosen UI paradigm. Edit Layout.tsx (title only). index.css is pre-generated — do NOT touch it.
+Follow `.claude/skills/frontend-impl/SKILL.md` to build DashboardOverview.tsx with the chosen UI paradigm. Layout.tsx title is pre-set to the appgroup name — skip editing it unless you need a different title. index.css is pre-generated — do NOT touch it.
 
 ### Step 3: Build
 Run `npm run build`. If it fails, fix the errors and retry until the build succeeds.
 Deployment happens automatically after you finish — do NOT deploy manually.
+After `npm run build` succeeds, STOP immediately. Do not write summaries.
 
 **WRITE ONCE RULE:** Write/edit each file ONCE. Do NOT write a file, read it back, then rewrite it.
+
+**IMPORT HYGIENE:** Only import what you actually use. TypeScript strict mode errors on unused imports/variables. Every import, every prop, every variable must be used.
 
 **NEVER USE BASH FOR FILE OPERATIONS.** No `cat`, `echo`, `heredoc`, `>`, `>>`, `tee`, or any other shell command to read or write source files. ALWAYS use Read/Write/Edit tools. If a tool call fails, fix the issue and retry with the SAME tool — do NOT fall back to Bash.
 
@@ -38,6 +43,7 @@ The following files are **pre-generated** and provide a complete React Router ap
 - `src/App.tsx` — HashRouter with all routes configured
 - `src/components/Layout.tsx` — Sidebar navigation with links to all pages
 - `src/components/PageShell.tsx` — Consistent page header wrapper
+- `src/components/TopBar.tsx` — Apps menu + profile dropdown (included in Layout)
 - `src/pages/DashboardOverview.tsx` — Skeleton with data hook, enrichment, loading/error (**you fill the content!**)
 - `src/hooks/useDashboardData.ts` — Central hook: fetches all entities, provides lookup maps, loading/error state
 - `src/types/enriched.ts` — Enriched types with resolved display names (e.g. `EnrichedKurse` with `dozentName`)
@@ -66,7 +72,7 @@ The CRUD pages provide basic list-based CRUD as a fallback. **Your job is to bui
 - **Rules of Hooks** — ALL hooks (`useState`, `useEffect`, `useMemo`, `useCallback`) MUST be placed BEFORE any early returns (`if (loading) return ...`, `if (error) return ...`). Placing hooks after early returns causes React error #310 at runtime.
 - **Reuse pre-generated dialogs in DashboardOverview** — When the dashboard needs create/edit dialogs, ALWAYS import and reuse the pre-generated `{Entity}Dialog` from `@/components/dialogs/{Entity}Dialog`. Do NOT build custom dialog forms — they lack photo scan, validation, and all field types. Example: `import { KurseDialog } from '@/components/dialogs/KurseDialog';`
 - **index.css** — NEVER touch. Pre-generated design system (font, colors, sidebar theme). Use existing tokens.
-- **Layout.tsx** — NEVER Write, only Edit (title/subtitle only).
+- **Layout.tsx** — APP_TITLE is pre-set to the appgroup name. Only Edit if you need a different title.
 - **useDashboardData.ts, enriched.ts, enrich.ts, formatters.ts, ai.ts, chat-context.ts, ChatWidget.tsx** — NEVER touch. Use as-is.
 - **`src/config/ai-features.ts`** — You MAY edit this file. Set `AI_PHOTO_SCAN['EntityName']` to `true` to enable the "Foto scannen" button in that entity's dialog. The button lets users photograph a document/receipt/card and auto-fill form fields via AI.
 - **CRUD pages and dialogs** — NEVER touch. Complete with all logic.
@@ -86,6 +92,7 @@ The CRUD pages provide basic list-based CRUD as a fallback. **Your job is to bui
   dozentenList={dozenten}                    // list prop name = {entityIdentifier}List — EXACTLY matching useDashboardData key
   raeumeList={raeume}                        // e.g. dozenten → dozentenList, raeume → raeumeList (NOT dozentList/raumList)
   enablePhotoScan={AI_PHOTO_SCAN['Kurse']}   // import AI_PHOTO_SCAN from '@/config/ai-features'
+  enablePhotoLocation={AI_PHOTO_LOCATION['Kurse']}  // import AI_PHOTO_LOCATION — extract GPS from photo EXIF for geo field auto-fill
 />
 ```
 
@@ -119,9 +126,9 @@ defaultValues={opt ? { field_name: opt } : undefined}
 **`StatCard`** — `icon` must be rendered JSX, NOT a component reference:
 ```tsx
 // ✅ CORRECT
-<StatCard title="Kurse" value="42" description="Gesamt" icon={<BookOpen size={18} className="text-muted-foreground" />} />
+<StatCard title="Kurse" value="42" description="Gesamt" icon={<IconBook size={18} className="text-muted-foreground" />} />
 // ❌ WRONG
-<StatCard icon={BookOpen} />
+<StatCard icon={IconBook} />
 ```
 
 **`ConfirmDialog`** — uses `onClose` (not `onCancel`):
@@ -160,30 +167,37 @@ All UI you build must work from 320px mobile to 1440px+ desktop without any elem
 - **Cards and panels:** Always use `overflow-hidden` on card/panel wrappers. Content must never poke out.
 - **No fixed widths on interactive elements:** Use `w-full`, `min-w-0`, `max-w-full`, or responsive widths (`w-full sm:w-auto`). Never set a fixed `w-[Npx]` on buttons, inputs, or action bars that could exceed the parent width.
 - **Flex rows with actions:** Use `flex-wrap` on any row of buttons or badges. On mobile, consider icon-only buttons (`<span className="hidden sm:inline">Label</span>`).
-- **Text overflow:** Use `truncate` or `line-clamp-2` on text that could grow (names, descriptions, labels). Always pair with `min-w-0` on the flex child.
+- **Text overflow:** Use `truncate` or `line-clamp-2` on text that could grow (names, descriptions, labels, formatted numbers). Always pair with `min-w-0` on the flex child. Large formatted values (e.g., `"11.900,00 €"`) easily overflow stat cards on mobile — keep values short or use abbreviations (e.g., `"11,9k €"`).
 - **Grid layouts:** Use responsive columns (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`). Never use a fixed column count that assumes desktop width.
 - **Tables:** Wrap in `overflow-x-auto` so they scroll horizontally on small screens instead of breaking the layout.
 - **Bottom action bars / footers inside cards:** Use `flex-wrap gap-2` and ensure buttons shrink (`shrink-0` only on icons, not on the button itself).
+- **Touch-friendly actions:** NEVER hide interactive elements (buttons, icons, links) behind hover. No `opacity-0 group-hover:opacity-100`, no `invisible group-hover:visible`, no `hidden group-hover:block`. All clickable elements must be visible and tappable without hovering. Hover feedback (bg color change, shadow) is fine.
 
-### Icons (lucide-react only)
+### Icons (@tabler/icons-react only)
 
-All icons come from `lucide-react` — it's pre-installed. Do NOT use heroicons, react-icons, or inline SVGs.
+All icons come from `@tabler/icons-react` — it's the only icon library installed. Do NOT use heroicons, react-icons, lucide-react, or inline SVGs. Tabler icons are prefixed with `Icon` (e.g., `IconPlus`, `IconPencil`).
 
 ```tsx
-import { Plus, Pencil, Trash2, Calendar, Clock, MapPin, User } from 'lucide-react';
+import { IconPlus, IconPencil, IconTrash, IconCalendar, IconClock, IconMapPin, IconUsers } from '@tabler/icons-react';
 ```
 
 **Sizing conventions:**
 - Inline with text / buttons: `size={16}` or `className="h-4 w-4"`
 - StatCard icons: `size={18}`
 - Empty state illustrations: `size={48}` with `text-muted-foreground`
+- Use `stroke` prop (not `strokeWidth`) for stroke width: `stroke={1.5}`
 
 **Always pair with `shrink-0`** when inside a flex row to prevent the icon from collapsing:
 ```tsx
-<Pencil size={16} className="shrink-0" />
+<IconPencil size={16} className="shrink-0" />
 ```
 
-**Do NOT use emoji as icons.** Use lucide icons instead — they match the design system.
+**Do NOT use emoji as icons.** Use Tabler icons instead — they match the design system.
+
+### Build troubleshooting
+
+- If `npm run build` is killed without an error message, it's an **out-of-memory** issue — NOT a missing dependency. Fix: `NODE_OPTIONS="--max-old-space-size=4096" npx vite build`
+- Do NOT install additional icon/UI packages. Everything needed is pre-installed.
 
 ---
 
@@ -205,6 +219,7 @@ import { Plus, Pencil, Trash2, Calendar, Clock, MapPin, User } from 'lucide-reac
 | `src/App.tsx` | React Router with all routes |
 | `src/components/Layout.tsx` | Sidebar navigation |
 | `src/components/PageShell.tsx` | Page header wrapper |
+| `src/components/TopBar.tsx` | Apps menu + profile dropdown (in Layout) |
 | `src/pages/*Page.tsx` | CRUD pages per entity |
 | `src/components/dialogs/*Dialog.tsx` | Create/edit dialogs |
 | `src/components/ConfirmDialog.tsx` | Delete confirmation |

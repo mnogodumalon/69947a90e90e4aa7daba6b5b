@@ -217,7 +217,7 @@ export default function DashboardOverview() {
         <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setFilterKategorie(null)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            className={`mr-2 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               filterKategorie === null
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-background text-muted-foreground border-border hover:border-primary/50'
@@ -247,7 +247,7 @@ export default function DashboardOverview() {
         </div>
 
         {/* Priority filter */}
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap ml-2">
           {['sehr_hoch', 'hoch'].map(key => {
             const cfg = PRIORITY_CONFIG[key];
             const active = filterPriority === key;
@@ -265,7 +265,7 @@ export default function DashboardOverview() {
           })}
           <button
             onClick={() => setShowDone(!showDone)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            className={`ml-2 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               showDone
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-background text-muted-foreground border-border hover:border-primary/50'

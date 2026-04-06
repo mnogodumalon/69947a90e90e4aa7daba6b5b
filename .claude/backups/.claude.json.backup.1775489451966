@@ -36,7 +36,10 @@
     "tengu_tool_search_unsupported_models": [
       "haiku"
     ],
-    "tengu_attribution_header": true
+    "tengu_attribution_header": true,
+    "tengu_workout2": true,
+    "tengu_file_write_optimization": false,
+    "tengu_cork_m4q": false
   },
   "firstStartTime": "2026-03-18T06:50:04.842Z",
   "userID": "4ca473fde32678ea0b82dc08257e388e6906d034e1116c1c64e51bdb479f3285",
