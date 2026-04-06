@@ -248,7 +248,7 @@ export default function DashboardOverview() {
 
         {/* Priority filter */}
         <div className="flex gap-1.5 flex-wrap ml-2">
-          {['sehr_hoch', 'hoch'].map(key => {
+          {['sehr_hoch', 'hoch', 'normal', 'niedrig'].map(key => {
             const cfg = PRIORITY_CONFIG[key];
             const active = filterPriority === key;
             return (
